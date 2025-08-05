@@ -34,6 +34,8 @@ data$smoker_num <- ifelse(data$smoker_fac == "Yes", 1, 0)
 
 str(data)
 
-write.csv()
+write.csv(data, file = "clean_data/patient_info_clean.csv")
+
+
 
 
