@@ -1,0 +1,59 @@
+classify_gene <- function(logFC, padj) {
+  
+  if (is.na(padj)) {
+    padj <- 1
+  }
+  
+  if (logFC > 1 && padj < 0.05) {
+    return("Upregulated")
+  } else if (logFC < -1 && padj < 0.05) {
+    return("Downregulated")
+  } else {
+    return("Not_Significant")
+  }
+}
+
+
+data<-read.csv(file.choose())
+data2<-read.csv(file.choose())
+input_dir <- "Raw_Data" 
+output_dir <- "Results"
+
+
+# create output folder if not already exist
+
+if(!dir.exists(output_dir)){
+  dir.create(output_dir)
+}
+
+
+# List which files to process
+files_to_process <- c("DEGs_Data_1.csv", "DEGs_Data_2.csv") 
+
+# Loop over each file
+for (file in files_to_process) {
+  cat("\nProcessing:", file, "\n")
+  
+  # Read data
+  filepath <- file.path(input_dir, file)
+  df <- read.csv(filepath, stringsAsFactors = FALSE)
+  
+  # Replace missing padj with 1
+  df$padj[is.na(df$padj)] <- 1
+  
+  # Apply classification function
+  df$status <- mapply(classify_gene, df$logFC, df$padj)
+  
+  # Save processed file into Results folder
+  output_file <- file.path(output_dir, paste0("processed_", file))
+  write.csv(df, output_file, row.names = FALSE)
+  
+  # Print summary using table()
+  cat("Summary counts:\n")
+  print(table(df$status))
+  
+  # Also print counts of significant genes (Up + Down)
+  sig_count <- sum(df$status %in% c("Upregulated", "Downregulated"))
+  cat("Total significant genes:", sig_count, "\n")
+}
+
